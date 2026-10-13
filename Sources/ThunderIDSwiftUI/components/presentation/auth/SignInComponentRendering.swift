@@ -23,6 +23,8 @@ extension SignIn {
             return AnyView(dividerComponentView(component, signInState: signInState))
         } else if type == "ACTION" {
             return AnyView(actionComponentView(component, signInState: signInState))
+        } else if type == "KEY_VALUE_LIST" {
+            return AnyView(keyValueListComponentView(component, signInState: signInState))
         } else {
             return AnyView(EmptyView())
         }
@@ -30,10 +32,11 @@ extension SignIn {
 
     @ViewBuilder
     private func textComponentView(_ component: FlowComponent, signInState: SignInState) -> some View {
-        let isHeading = component.variant == "HEADING_1"
+        let headingFont = component.headingFont
+        let isHeading = headingFont != nil
         let isCentered = component.align == "center"
         Text(resolved(component.label, signInState: signInState))
-            .font(isHeading ? .title2 : .body)
+            .font(headingFont ?? .body)
             .bold(isHeading)
             .frame(maxWidth: isCentered ? .infinity : nil, alignment: isCentered ? .center : .leading)
             .multilineTextAlignment(isCentered ? .center : .leading)
@@ -91,6 +94,18 @@ extension SignIn {
             actionButton(for: action, signInState: signInState)
         } else {
             EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private func keyValueListComponentView(_ component: FlowComponent, signInState: SignInState) -> some View {
+        let raw = component.source.flatMap { signInState.additionalData[$0]?.value }
+        let pairs = KeyValuePair.list(from: raw).map {
+            KeyValuePair(label: resolved($0.label, signInState: signInState), value: $0.value)
+        }
+        // An empty panel tells the user nothing, so a list with no pairs renders nothing at all.
+        if !pairs.isEmpty {
+            KeyValueList(label: resolved(component.label, signInState: signInState), pairs: pairs)
         }
     }
 
