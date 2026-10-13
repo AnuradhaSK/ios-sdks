@@ -281,22 +281,6 @@ public enum FlowType: String {
     case invitedUserRegistration = "INVITED_USER_REGISTRATION"
 }
 
-public struct EmbeddedFlowResponse: Decodable {
-    public let flowId: String?
-    public let flowStatus: FlowStatus
-    public let stepId: String?
-    public let type: String?
-    public let data: FlowStepData?
-    public let assertion: String?
-    public let failureReason: String?
-    public let challengeToken: String?
-
-    enum CodingKeys: String, CodingKey {
-        case flowId = "executionId"
-        case flowStatus, stepId, type, data, assertion, failureReason, challengeToken
-    }
-}
-
 public enum FlowStatus: Codable {
     case promptOnly
     case complete

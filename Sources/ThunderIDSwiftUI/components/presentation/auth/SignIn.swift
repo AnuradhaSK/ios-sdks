@@ -334,13 +334,15 @@ public struct BaseSignIn<Content: View>: View {
                     passkeyChallenge: passkeyChallenge,
                     passkeyCreationOptions: passkeyCreationOptions
                 )
-            } else if response.type == "REDIRECTION", let redirectURL = response.data?.redirectURL {
+            } else if let redirectURL = FederatedRedirect.redirectURL(in: response) {
                 await handleRedirection(redirectURL, response: response, actionId: actionId)
             } else {
                 signInState.update(from: response)
             }
         case .error:
-            let msg = response.failureReason ?? "Sign-in failed"
+            // The translated message, as the JavaScript SDK shows it, before the server's English fallback.
+            let msg = signInState.templateResolver?.translate(response.error?.message)
+                ?? response.failureReason ?? "Sign-in failed"
             signInState.error = msg
             onError?(msg)
         }
@@ -372,39 +374,25 @@ public struct BaseSignIn<Content: View>: View {
     }
 
     private func handleRedirection(_ redirectURL: String, response: EmbeddedFlowResponse, actionId: String?) async {
-        guard let url = URL(string: redirectURL), let scheme = callbackURLScheme() else {
-            let message = i18n.resolve("signIn.federatedError")
-            signInState.error = message
-            onError?(message)
-            return
-        }
         signInState.isLoading = true
         defer { signInState.isLoading = false }
         do {
-            let callbackURL = try await federatedAuthSession.authenticate(url: url, callbackURLScheme: scheme)
-            guard let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
-                .queryItems?.first(where: { $0.name == "code" })?.value else {
-                throw ThunderIDError(code: .invalidGrant, message: "Authorization code missing from callback URL")
-            }
+            let inputs = try await FederatedRedirect.callbackInputs(
+                redirectURL: redirectURL, client: state.client, session: federatedAuthSession
+            )
             await submit(
                 actionId: actionId,
-                inputs: ["code": code],
+                inputs: inputs,
                 flowId: response.flowId,
                 challengeToken: response.challengeToken
             )
         } catch is FederatedAuthSession.CancelledError {
             // User dismissed the browser sheet — reset silently, no error surfaced.
         } catch {
-            signInState.error = error.localizedDescription
-            onError?(error.localizedDescription)
+            let message = error is FederatedRedirect.StartError
+                ? i18n.resolve("signIn.federatedError") : error.localizedDescription
+            signInState.error = message
+            onError?(message)
         }
-    }
-
-    private func callbackURLScheme() -> String? {
-        guard let afterSignInUrl = try? state.client.getConfiguration().afterSignInUrl,
-              let scheme = URLComponents(string: afterSignInUrl)?.scheme else {
-            return nil
-        }
-        return scheme
     }
 }

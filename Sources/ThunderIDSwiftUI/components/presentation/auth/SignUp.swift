@@ -230,12 +230,14 @@ public final class SignUpState: ObservableObject {
 /// Unstyled base variant (spec §8.3).
 public struct BaseSignUp<Content: View>: View {
     @EnvironmentObject private var state: ThunderIDState
+    @EnvironmentObject private var i18n: ThunderIDI18n
     public let applicationId: String
     public let onComplete: (() -> Void)?
     public let onError: ((String) -> Void)?
     public let content: (SignUpState) -> Content
 
     @StateObject private var signUpState = SignUpState { _, _, _, _ in }
+    @State private var federatedAuthSession = FederatedAuthSession()
 
     public init(
         applicationId: String,
@@ -281,14 +283,14 @@ public struct BaseSignUp<Content: View>: View {
         defer { signUpState.isLoading = false }
         do {
             let response = try await state.client.signUp()
-            await handleResponse(response)
+            await handleResponse(response, actionId: nil)
         } catch {
             signUpState.error = error.localizedDescription
             onError?(error.localizedDescription)
         }
     }
 
-    private func submit(actionId: String, inputs: [String: String], flowId: String?, challengeToken: String?) async {
+    private func submit(actionId: String?, inputs: [String: String], flowId: String?, challengeToken: String?) async {
         signUpState.isLoading = true
         defer {
             signUpState.isLoading = false
@@ -299,24 +301,55 @@ public struct BaseSignUp<Content: View>: View {
                 flowId: flowId, actionId: actionId, inputs: inputs, challengeToken: challengeToken
             )
             let response = try await state.client.signUp(payload: payload)
-            await handleResponse(response)
+            await handleResponse(response, actionId: actionId)
         } catch {
             signUpState.error = error.localizedDescription
             onError?(error.localizedDescription)
         }
     }
 
-    private func handleResponse(_ response: EmbeddedFlowResponse) async {
+    private func handleResponse(_ response: EmbeddedFlowResponse, actionId: String?) async {
         switch response.flowStatus {
         case .complete:
             await state.refresh()
             onComplete?()
         case .promptOnly:
-            signUpState.update(from: response)
+            // A federated sign-up (e.g. ahead of an account-linking prompt) arrives as a
+            // REDIRECTION step: follow it rather than rendering an empty form.
+            if let redirectURL = FederatedRedirect.redirectURL(in: response) {
+                await handleRedirection(redirectURL, response: response, actionId: actionId)
+            } else {
+                signUpState.update(from: response)
+            }
         case .error:
-            let msg = response.failureReason ?? "Sign-up failed"
+            // The translated message, as the JavaScript SDK shows it, before the server's English fallback.
+            let msg = signUpState.templateResolver?.translate(response.error?.message)
+                ?? response.failureReason ?? "Sign-up failed"
             signUpState.error = msg
             onError?(msg)
+        }
+    }
+
+    private func handleRedirection(_ redirectURL: String, response: EmbeddedFlowResponse, actionId: String?) async {
+        signUpState.isLoading = true
+        defer { signUpState.isLoading = false }
+        do {
+            let inputs = try await FederatedRedirect.callbackInputs(
+                redirectURL: redirectURL, client: state.client, session: federatedAuthSession
+            )
+            await submit(
+                actionId: actionId,
+                inputs: inputs,
+                flowId: response.flowId,
+                challengeToken: response.challengeToken
+            )
+        } catch is FederatedAuthSession.CancelledError {
+            // User dismissed the browser sheet — reset silently, no error surfaced.
+        } catch {
+            let message = error is FederatedRedirect.StartError
+                ? i18n.resolve("signUp.federatedError") : error.localizedDescription
+            signUpState.error = message
+            onError?(message)
         }
     }
 }
