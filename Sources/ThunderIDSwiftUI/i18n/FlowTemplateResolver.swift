@@ -16,6 +16,7 @@ import Foundation
 /// `FlowTemplateResolver` (`sdks/flutter/lib/src/flow_template_resolver.dart`).
 public struct FlowTemplateResolver {
     private static let templateRegex = try? NSRegularExpression(pattern: "\\{\\{\\s*(.*?)\\s*\\}\\}")
+    private static let paramRegex = try? NSRegularExpression(pattern: "\\{\\{\\s*param\\(\\s*(\\w+)\\s*\\)\\s*\\}\\}")
 
     private let meta: [String: Any]
 
@@ -41,6 +42,53 @@ public struct FlowTemplateResolver {
             }
             result += text[lastEnd..<matchRange.lowerBound]
             result += replacement(for: match, in: text)
+            lastEnd = matchRange.upperBound
+        }
+        result += text[lastEnd...]
+        return result
+    }
+
+    /// The translation of a flow error's `key`, with its `params` substituted, or nil when there is
+    /// none to show. As in the JavaScript SDK, the key is looked up as `<namespace>.<key>` and then
+    /// under the `system` namespace, and a translation that still has a placeholder is not used.
+    public func translate(_ text: FlowErrorText?) -> String? {
+        guard let key = text?.key, !key.isEmpty, let paramRegex = Self.paramRegex else {
+            return nil
+        }
+        for candidate in [key, "system.\(key)"] {
+            guard let dot = candidate.firstIndex(of: ".") else {
+                continue
+            }
+            let translation = substitute(
+                text?.params ?? [:],
+                in: resolveTranslation("\(candidate[..<dot]):\(candidate[candidate.index(after: dot)...])"),
+                using: paramRegex
+            )
+            let range = NSRange(translation.startIndex..<translation.endIndex, in: translation)
+            if !translation.isEmpty, paramRegex.firstMatch(in: translation, range: range) == nil {
+                return translation
+            }
+        }
+        return nil
+    }
+
+    /// Replaces each `{{param(name)}}` in one pass over `text`, so a param value that itself holds a
+    /// placeholder is never substituted again. A placeholder with no param is left as it is.
+    private func substitute(
+        _ params: [String: String],
+        in text: String,
+        using paramRegex: NSRegularExpression
+    ) -> String {
+        var result = ""
+        var lastEnd = text.startIndex
+        let fullRange = NSRange(text.startIndex..<text.endIndex, in: text)
+        paramRegex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
+            guard let match, let matchRange = Range(match.range, in: text),
+                  let nameRange = Range(match.range(at: 1), in: text) else {
+                return
+            }
+            result += text[lastEnd..<matchRange.lowerBound]
+            result += params[String(text[nameRange])] ?? String(text[matchRange])
             lastEnd = matchRange.upperBound
         }
         result += text[lastEnd...]

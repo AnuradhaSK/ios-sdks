@@ -19,6 +19,7 @@ public enum DefaultStrings {
         "signUp.title": "Create account",
         "signUp.submit": "Create account",
         "signUp.loading": "Creating account…",
+        "signUp.federatedError": "Could not start federated sign-up",
         "signOut.button": "Sign out",
         "signOut.loading": "Signing out…",
         "callback.loading": "Completing sign-in…",
