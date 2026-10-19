@@ -22,6 +22,8 @@
 #   E2E_USERNAME       Test user to create (default e2e_mobile_user)
 #   E2E_PASSWORD       Test user password (default TestPassword@123)
 #   INSTALL_DIR        Where to unpack the distribution (default ./.thunderid-server)
+#   THUNDERID_SAMPLES_DIR, THUNDERID_SAMPLES_REPO, THUNDERID_SAMPLES_REF
+#                      Where the sample comes from (see scripts/prepare-sample.sh)
 #
 # Why not `npx thunderid`? That wrapper renders an interactive TUI and aborts with
 # "bubbletea: could not open TTY" when stdout is not a terminal, which is always the case on a CI
@@ -38,8 +40,10 @@ E2E_USER="${E2E_USERNAME:-e2e_mobile_user}"
 E2E_PASS="${E2E_PASSWORD:-TestPassword@123}"
 INSTALL_DIR="${INSTALL_DIR:-$SCRIPT_DIR/.thunderid-server}"
 
-# The sample owns its own application config, not the test script.
-CONFIG_FILE="$SCRIPT_DIR/../../Samples/Quickstart/thunderid-config/thunderid-config.yaml"
+# The sample lives in the thunder-id/samples repository; scripts/prepare-sample.sh fetches it and
+# wires it to this SDK checkout. The sample owns its own application config, not the test script.
+SAMPLE_DIR="$SCRIPT_DIR/.quickstart"
+CONFIG_FILE="$SAMPLE_DIR/thunderid-config/thunderid-config.yaml"
 
 # Must match the `id` in $CONFIG_FILE and the application ID the sample is built with.
 APP_ID="019e5b10-1001-7a2b-9c3d-4e5f60718293"
@@ -53,7 +57,7 @@ for arg in "$@"; do
         --skip-server) do_server=false ;;
         --skip-build) do_build=false ;;
         --skip-test) do_test=false ;;
-        -h | --help) sed -n '2,27p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h | --help) sed -n '2,29p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) maestro_args+=("$arg") ;;
     esac
 done
@@ -343,7 +347,7 @@ resolve_simulator() {
 # Build and install the sample
 # ---------------------------------------------------------------------------------------------
 build_sample() {
-    local sample_dir="$SCRIPT_DIR/../../Samples/Quickstart"
+    local sample_dir="$SAMPLE_DIR"
 
     echo "==> Configuring the sample"
     # The sample reaches the self-signed local server because its Info.plist carries an
@@ -401,6 +405,7 @@ run_flows() {
         -e E2E_PASSWORD="$E2E_PASS")
 }
 
+if $do_server || $do_build; then "$SCRIPT_DIR/scripts/prepare-sample.sh" >/dev/null; fi
 if $do_server; then
     start_server
     provision

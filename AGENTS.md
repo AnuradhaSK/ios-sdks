@@ -2,7 +2,9 @@
 
 ## Project overview
 
-Swift package providing the ThunderID authentication SDK (`ThunderID`) and a SwiftUI component library (`ThunderIDSwiftUI`). The `Samples/Quickstart` directory contains a standalone demo app.
+Swift package providing the ThunderID authentication SDK (`ThunderID`) and a SwiftUI component library (`ThunderIDSwiftUI`). The Quickstart demo app lives in the samples repository at [`quickstarts/ios`](https://github.com/thunder-id/samples/tree/main/quickstarts/ios); the E2E suite fetches it and builds it against this checkout via `Tests/e2e/scripts/prepare-sample.sh`.
+
+The [`Playground/`](Playground) app exercises every SDK capability (capability checks, a component explorer, a session inspector and an event log) against the SDK sources in this checkout through a local package reference. See [Playground/README.md](Playground/README.md) to run it against a local ThunderID server. When you add or change a capability or a ThunderIDSwiftUI component, add or update its check or story there too.
 
 ## SDK development specification
 
@@ -40,8 +42,11 @@ The SDK is white-labelable: a consuming app can override the brand/vendor namesp
 # Build and run tests
 swift test
 
-# Run SwiftLint (must pass before any PR)
+# Run SwiftLint (must pass before any PR); this covers Playground/ too
 swiftlint lint --strict
+
+# Build the playground against the local SDK (CI runs this in the build-playground job)
+(cd Playground && swift build)
 ```
 
 ## SwiftLint compliance (required)
@@ -79,8 +84,8 @@ Configuration lives in [.swiftlint.yml](.swiftlint.yml). Key rules enforced:
 ```
 Sources/ThunderID/          Core SDK (auth, token, http layers)
 Sources/ThunderIDSwiftUI/   SwiftUI component library
-Samples/Quickstart/         Demo app (not part of the SDK)
 Tests/                      Unit tests (excluded from SwiftLint)
+Playground/                 SwiftUI playground app built against the local SDK
 .swiftlint.yml              Lint configuration
 .github/workflows/          CI pipelines
 ```

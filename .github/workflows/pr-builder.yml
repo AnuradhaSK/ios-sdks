@@ -107,13 +107,41 @@ jobs:
       - name: 🗄️ Cache Swift Packages
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
-          path: Samples/Quickstart/.build
-          key: ${{ runner.os }}-swift-sample-${{ hashFiles('Samples/Quickstart/Package.resolved') }}
+          path: Tests/e2e/.quickstart/.build
+          key: ${{ runner.os }}-swift-sample-${{ hashFiles('Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-swift-sample-
 
+      # The sample lives in thunder-id/samples; build it against this checkout so a change that
+      # breaks the Quickstart fails here rather than after the release.
+      - name: 📥 Fetch Quickstart Sample
+        run: Tests/e2e/scripts/prepare-sample.sh
+
       - name: 🔨 Build Quickstart Sample
-        working-directory: Samples/Quickstart
+        working-directory: Tests/e2e/.quickstart
+        run: swift build
+
+  build-playground:
+    name: 🛠️ Build Playground
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' }}
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: 🗄️ Cache Swift Packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: Playground/.build
+          key: ${{ runner.os }}-swift-playground-${{ hashFiles('Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-swift-playground-
+
+      # The playground depends on the SDK through a local package reference, so this builds it
+      # against the sources in this pull request.
+      - name: 🔨 Build Playground
+        working-directory: Playground
         run: swift build
 
   e2e:
