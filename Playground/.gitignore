@@ -1,0 +1,19 @@
+# Xcode
+xcuserdata/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+Package.resolved
+Playground.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+
+# OS generated files
+.DS_Store
+
+# Local config (use Config.plist.example as template)
+Sources/Config.plist
+Sources/server.cert

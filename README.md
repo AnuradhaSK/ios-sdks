@@ -4,6 +4,7 @@ iOS SDK for ThunderID. Provides authentication and user management for native iO
 
 - [Quickstart](https://thunderid.dev/docs/next/getting-started/connect-your-application/ios/)
 - [API reference](https://thunderid.dev/docs/next/sdks/ios/overview/)
+- [Sample app](https://github.com/thunder-id/samples/tree/main/quickstarts/ios)
 
 ## Installation
 
@@ -15,6 +16,10 @@ iOS SDK for ThunderID. Provides authentication and user management for native iO
 
 > [!NOTE]
 > To pin to a release instead of tracking `main`, replace `branch: "main"` with `from: "x.x.x"`, using the latest version: ![GitHub release](https://img.shields.io/github/v/release/thunder-id/ios-sdks)
+
+## Playground
+
+[`Playground/`](Playground) is a SwiftUI app for trying every SDK capability from source: capability checks, a component explorer with generated SwiftUI snippets, a session inspector and an SDK event log. See [Playground/README.md](Playground/README.md) to run it against a local ThunderID server.
 
 ## Contributing
 
