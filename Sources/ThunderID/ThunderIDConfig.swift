@@ -130,8 +130,14 @@ public struct ThunderIDHttpConfig {
 /// `{baseUrl}/{collection}`. A single resource is addressed as `{collection}/{id}`.
 public struct ThunderIDEndpoints {
     public var agents: String?
+    /// Defaults to `{baseUrl}/agent-types`.
+    public var agentTypes: String?
     public var applications: String?
+    public var groups: String?
+    public var roles: String?
     public var users: String?
+    /// Defaults to `{baseUrl}/user-types`.
+    public var userTypes: String?
     /// The app backend's auth endpoints. Setting them hands sign-in to the backend: the SDK then signs in,
     /// reads the session, and sends API calls through the backend, and never holds the user's tokens.
     /// `baseUrl` is then the API base whose requests go through the backend's proxy. Unset by default.
@@ -139,13 +145,21 @@ public struct ThunderIDEndpoints {
 
     public init(
         agents: String? = nil,
+        agentTypes: String? = nil,
         applications: String? = nil,
+        groups: String? = nil,
+        roles: String? = nil,
         users: String? = nil,
+        userTypes: String? = nil,
         backend: ThunderIDBackendEndpoints? = nil
     ) {
         self.agents = agents
+        self.agentTypes = agentTypes
         self.applications = applications
+        self.groups = groups
+        self.roles = roles
         self.users = users
+        self.userTypes = userTypes
         self.backend = backend
     }
 }
