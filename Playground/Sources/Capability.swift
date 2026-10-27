@@ -24,6 +24,11 @@ enum CapabilityID: String, CaseIterable {
     case userGroups
     case agentTypes
     case agentMemberships
+    case entityTypes
+    case userUsages
+    case administrationFlows
+    case applications
+    case serverResources
     case adminWrites
     case permissionHierarchy
     case grantedPermissions
@@ -196,6 +201,31 @@ extension CapabilityCatalog {
             mode: .automatic
         ),
         Capability(
+            id: .entityTypes,
+            name: "Type schemas",
+            api: "userTypes.get(id:) · agentTypes.get(id:)",
+            mode: .automatic
+        ),
+        Capability(id: .userUsages, name: "User usages", api: "users.usages(id:)", mode: .automatic),
+        Capability(
+            id: .applications,
+            name: "Applications",
+            api: "applications.list() · applications.get(id:)",
+            mode: .automatic
+        ),
+        Capability(
+            id: .serverResources,
+            name: "Server resources",
+            api: "organizationUnits · resourceServers · flows · design · translations · serverConfig",
+            mode: .automatic
+        ),
+        Capability(
+            id: .administrationFlows,
+            name: "Administration flows",
+            api: "administrationFlows.resolve(_:)",
+            mode: .automatic
+        ),
+        Capability(
             id: .adminWrites,
             name: "Group and role writes",
             api: "groups.create · addMembers · roles.create · addAssignments · delete",
@@ -227,4 +257,5 @@ final class ManagementIds: ObservableObject {
     @Published var roleId: String?
     @Published var userId: String?
     @Published var agentId: String?
+    @Published var applicationId: String?
 }

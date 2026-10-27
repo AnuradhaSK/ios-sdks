@@ -45,6 +45,17 @@ public enum ThunderIDErrorCode: String {
     // Management
     case forbidden = "FORBIDDEN"
     case notFound = "NOT_FOUND"
+    /// An administration flow did not complete: a step refused (its code and reason are in
+    /// ``ThunderIDError/flowError``), or the flow finished without the value the operation needed.
+    case administrationFlowFailed = "ADMINISTRATION_FLOW_FAILED"
+    /// An administration flow asked for input the caller cannot give, so it could not complete.
+    case administrationFlowIncomplete = "ADMINISTRATION_FLOW_INCOMPLETE"
+    /// The server configures an administration flow for the operation, but that flow no longer exists.
+    /// The operation was not performed.
+    case administrationFlowNotFound = "ADMINISTRATION_FLOW_NOT_FOUND"
+    /// The operation runs only through an administration flow, such as suspending an account, and the
+    /// server configures none for it. There is no management API to fall back to, so nothing was done.
+    case administrationFlowNotConfigured = "ADMINISTRATION_FLOW_NOT_CONFIGURED"
 
     // Network & Server
     case networkError = "NETWORK_ERROR"
@@ -57,11 +68,38 @@ public struct ThunderIDError: Error {
     public let code: ThunderIDErrorCode
     public let message: String
     public let underlyingError: Error?
+    /// The error the server returned, when a failed response's body was the server's error envelope:
+    /// the server's own error code, and its message and description with their translation keys and
+    /// parameters. Use it to show a message specific to the server's code. `nil` otherwise.
+    public let serverError: ServerError?
+    /// The error of the administration flow step that refused, when one did. Set only on the
+    /// `administrationFlow*` codes, which together form the administration flow error family.
+    public let flowError: FlowError?
 
-    public init(code: ThunderIDErrorCode, message: String, underlyingError: Error? = nil) {
+    public init(
+        code: ThunderIDErrorCode,
+        message: String,
+        underlyingError: Error? = nil,
+        serverError: ServerError? = nil,
+        flowError: FlowError? = nil
+    ) {
         self.code = code
         self.message = message
         self.underlyingError = underlyingError
+        self.serverError = serverError
+        self.flowError = flowError
+    }
+
+    /// Whether this error reports an administration flow that did not complete (a refused step, a flow
+    /// that asked for more input, a configured flow that no longer exists, or a flow-only operation with
+    /// no flow configured).
+    public var isAdministrationFlowError: Bool {
+        switch code {
+        case .administrationFlowFailed, .administrationFlowIncomplete, .administrationFlowNotFound,
+             .administrationFlowNotConfigured:
+            return true
+        default: return false
+        }
     }
 }
 

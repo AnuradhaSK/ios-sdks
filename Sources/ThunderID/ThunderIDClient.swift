@@ -357,7 +357,7 @@ public final class ThunderIDClient {
     // MARK: - Private helpers
 
     @discardableResult
-    private func requireInitialized() throws -> ThunderIDConfig {
+    func requireInitialized() throws -> ThunderIDConfig {
         guard let config else {
             throw ThunderIDError(code: .sdkNotInitialized, message: "Call initialize() before using the SDK")
         }
@@ -420,70 +420,6 @@ public final class ThunderIDClient {
         if let claims = try? decodeJwtToken(assertion) as [String: AnyCodable] {
             currentUser = User(claims: claims)
         }
-    }
-}
-
-// MARK: - Management
-
-public extension ThunderIDClient {
-    /// Application management operations. Throws until `initialize(config:)` has run.
-    var applications: ApplicationsAPI {
-        get throws { ApplicationsAPI(transport: try managementTransport("applications", override: \.applications)) }
-    }
-
-    /// User management operations. Throws until `initialize(config:)` has run.
-    var users: UsersAPI {
-        get throws {
-            UsersAPI(
-                transport: try managementTransport("users", override: \.users),
-                typesTransport: try managementTransport("user-types", override: \.userTypes)
-            )
-        }
-    }
-
-    /// Group management operations. Throws until `initialize(config:)` has run.
-    var groups: GroupsAPI {
-        get throws { GroupsAPI(transport: try managementTransport("groups", override: \.groups)) }
-    }
-
-    /// Role management operations. Throws until `initialize(config:)` has run.
-    var roles: RolesAPI {
-        get throws { RolesAPI(transport: try managementTransport("roles", override: \.roles)) }
-    }
-
-    /// Agent management operations. Throws until `initialize(config:)` has run.
-    var agents: AgentsAPI {
-        get throws {
-            AgentsAPI(
-                transport: try managementTransport("agents", override: \.agents),
-                typesTransport: try managementTransport("agent-types", override: \.agentTypes)
-            )
-        }
-    }
-
-    /// The permissions the signed-in user's access token carries, read from its `scopes` or `scope`
-    /// claim. Use it with ``ThunderIDPermissions/has(_:_:)`` to decide what to show; the server still
-    /// authorizes every request. Returns an empty list when no one is signed in.
-    func getGrantedPermissions() async -> [String] {
-        guard let token = try? await getAccessToken() else { return [] }
-        return ThunderIDPermissions.fromAccessToken(token)
-    }
-}
-
-private extension ThunderIDClient {
-    func managementTransport(
-        _ collection: String,
-        override: KeyPath<ThunderIDEndpoints, String?>
-    ) throws -> ManagementTransport {
-        let config = try requireInitialized()
-        guard let httpClient else {
-            throw ThunderIDError(code: .sdkNotInitialized, message: "Call initialize() before using the SDK")
-        }
-        return ManagementTransport(
-            httpClient: httpClient,
-            collectionUrl: config.endpoints[keyPath: override] ?? "\(config.baseUrl)/\(collection)",
-            fetcher: config.http.fetcher
-        )
     }
 }
 

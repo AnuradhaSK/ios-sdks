@@ -17,6 +17,8 @@ struct AdminPreview: View {
             PreviewHint(text: "Sign in to load live data. The management API uses the signed-in user's token.")
         } else if values.isLive, let missing = missingId {
             PreviewHint(text: "Set \(missing), or run the Management checks to find one on the server.")
+        } else if id.hasPrefix("application") {
+            ApplicationAdminPreview(id: id, values: values, onEvent: onEvent)
         } else if id.hasPrefix("user") || id.hasPrefix("agent") {
             IdentityAdminPreview(id: id, values: values, onEvent: onEvent)
         } else {
@@ -25,7 +27,9 @@ struct AdminPreview: View {
     }
 
     private var missingId: String? {
-        ["userId", "groupId", "roleId", "agentId"].first { values[$0] != nil && values.text($0).isEmpty }
+        ["userId", "groupId", "roleId", "agentId", "applicationId"].first {
+            values[$0] != nil && values.text($0).isEmpty
+        }
     }
 }
 

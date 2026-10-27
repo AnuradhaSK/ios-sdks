@@ -102,8 +102,22 @@ public struct UpdateAgentRequest: Codable {
     public var authFlowId: String?
     public var registrationFlowId: String?
     public var isRegistrationFlowEnabled: Bool?
+    public var assertion: TokenConfig?
+    public var loginConsent: AgentLoginConsentConfig?
+    /// Whether the agent acts on behalf of a signed-in user. The server does not store it, so a full
+    /// update sends it for the agent to be held to the delegated grant rules.
+    /// ``DelegationGrantTypes/isDelegated(_:)`` derives it from the agent's grant types.
+    public var delegated: Bool?
 
     public init() {}
+}
+
+/// The result of ``AgentsAPI/regenerateSecret(id:fetcher:)``.
+public struct RegenerateAgentSecretResult {
+    /// The agent after the change.
+    public let agent: Agent
+    /// The new client secret. This is the only time it can be read.
+    public let clientSecret: String
 }
 
 /// A page of the roles assigned to an agent, by name.

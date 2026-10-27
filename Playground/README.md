@@ -15,7 +15,10 @@ The app has four tabs:
   session) run only when tapped; Run all covers the rest.
   - **Management**: the management endpoints, groups (`groups.list/get`), group members,
     roles (`roles.list/get`), role assignments (with the `type` filter), the signed-in user's
-    groups and the user types, agent types, and an agent's groups and roles. These only read.
+    groups and the user types, agent types, and an agent's groups and roles, the first user
+    type's and agent type's attribute schemas (`userTypes.get`, `agentTypes.get`), what references
+    the signed-in user (`users.usages`), and which operations the server routes through an
+    administration flow (`administrationFlows.resolve`). These only read: no flow runs.
     **Group and role writes** is tap-only because it changes the server: it creates a
     `playground-*` group, adds and removes a user, creates a role assigned to the group, removes
     and re-adds the assignment, then deletes both, cleaning up even when a step fails. The read
@@ -34,7 +37,8 @@ The app has four tabs:
   story, edit its props under Controls, preview it in light or dark, and copy the SwiftUI snippet
   generated from the current props under Code. The admin components (`UserList`, `UserDetails`,
   `UserCreate`, `GroupList`, `GroupCreate`, `GroupMembers`, `RoleList`, `RoleCreate`,
-  `RolePermissions`, `RoleAssignments`, `AgentList`, `AgentDetails`, `AgentCreate`) are under the
+  `RolePermissions`, `RoleAssignments`, `AgentList`, `AgentDetails`, `AgentCreate`, `ApplicationList`,
+  `ApplicationDetails`, `ApplicationCreate`) are under the
   `Admin ·` groups. Their Sample, Loading, Empty, Error and Submitting stories render the `Base*`
   view with sample records (members and assignments can be added and removed locally); Live
   renders the connected view against the management API with the signed-in user's token. Live
@@ -96,6 +100,20 @@ is empty.
 | `THUNDERID_ENDPOINT_ROLES` | `endpoints.roles` |
 | `THUNDERID_ENDPOINT_AGENTS` | `endpoints.agents` |
 | `THUNDERID_ENDPOINT_AGENT_TYPES` | `endpoints.agentTypes` |
+| `THUNDERID_ENDPOINT_ORGANIZATION_UNITS` | `endpoints.organizationUnits` |
+| `THUNDERID_ENDPOINT_RESOURCE_SERVERS` | `endpoints.resourceServers` |
+| `THUNDERID_ENDPOINT_CONNECTIONS` | `endpoints.connections` |
+| `THUNDERID_ENDPOINT_FLOWS` | `endpoints.flows` |
+| `THUNDERID_ENDPOINT_NOTIFICATION_TEMPLATES` | `endpoints.notificationTemplates` |
+| `THUNDERID_ENDPOINT_DESIGN` | `endpoints.design` |
+| `THUNDERID_ENDPOINT_I18N` | `endpoints.i18n` |
+| `THUNDERID_ENDPOINT_SERVER_CONFIG` | `endpoints.serverConfig` |
+| `THUNDERID_ENDPOINT_GATEWAYS` | `endpoints.gateways` |
+| `THUNDERID_ENDPOINT_VARIABLES` | `endpoints.variables` |
+| `THUNDERID_ENDPOINT_SECRETS` | `endpoints.secrets` |
+| `THUNDERID_ENDPOINT_CONFIGURATION_VERSIONS` | `endpoints.configurationVersions` |
+| `THUNDERID_ENDPOINT_IMPORT` | `endpoints.import` |
+| `THUNDERID_ENDPOINT_EXPORT` | `endpoints.export` |
 
 These keys can also be passed as launch arguments, which win over `Config.plist`, for example
 `-THUNDERID_ENDPOINT_GROUPS https://localhost:9090/groups`.

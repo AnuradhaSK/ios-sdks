@@ -17,6 +17,9 @@ extension CheckContext {
         .userGroups: { try await $0.userGroups() },
         .agentTypes: { try await $0.agentTypes() },
         .agentMemberships: { try await $0.agentMemberships() },
+        .entityTypes: { try await $0.entityTypes() },
+        .userUsages: { try await $0.userUsages() },
+        .administrationFlows: { try await $0.administrationFlows() },
         .adminWrites: { try await $0.adminWrites() },
         .permissionHierarchy: { try $0.permissionHierarchy() },
         .grantedPermissions: { try await $0.grantedPermissions() }
@@ -61,7 +64,7 @@ extension CheckContext {
         case "roles": _ = try? await client.roles.list(limit: 1, fetcher: fetcher)
         case "agents": _ = try? await client.agents.list(limit: 1, fetcher: fetcher)
         case "agent-types": _ = try? await client.agents.types(limit: 1, fetcher: fetcher)
-        default: return nil
+        default: await probeServerResource(path, fetcher: fetcher)
         }
         return probe.collectionURL
     }
@@ -161,6 +164,45 @@ extension CheckContext {
             + (roles.roles.isEmpty ? "" : " (\(roles.roles.prefix(3).joined(separator: ", ")))")
     }
 
+    /// Reads the first user type and agent type with their attribute schemas.
+    func entityTypes() async throws -> String {
+        try await requireSignedIn()
+        var parts: [String] = []
+        if let first = try await client.userTypes.list(limit: 1).types.first {
+            let details = try await client.userTypes.get(id: first.id)
+            parts.append("user type \"\(details.handle)\" has \(details.schema.count) attributes")
+        }
+        if let first = try await client.agentTypes.list(limit: 1).types.first {
+            let details = try await client.agentTypes.get(id: first.id)
+            parts.append("agent type \"\(details.handle)\" has \(details.schema.count) attributes")
+        }
+        log.record("types:schemas", parts.joined(separator: "; "), kind: .success)
+        return parts.isEmpty ? "The server has no user or agent types." : parts.joined(separator: "; ")
+    }
+
+    /// Lists what references the signed-in user, which is what a user deletion would affect.
+    func userUsages() async throws -> String {
+        try await requireSignedIn()
+        let userId = try await ownUserId()
+        let usages = try await client.users.usages(id: userId)
+        log.record("users:usages", "\(usages.count) for \(userId)", kind: .success)
+        let kinds = tally(usages.usages.map(\.resourceType))
+        return "\(usages.count) resources reference \(short(userId)) (\(kinds))"
+    }
+
+    /// Reads which operations the server routes through an administration flow. Only reads: no flow runs.
+    func administrationFlows() async throws -> String {
+        try await requireSignedIn()
+        let resolved = try await client.administrationFlows.resolve(AdministrationFlowConfigKey.allCases)
+        log.record("flows:administration", "\(resolved.count) configured", kind: .success)
+        guard !resolved.isEmpty else {
+            return "No administration flows configured; every operation calls the API directly."
+        }
+        let names = resolved.keys.map(\.rawValue).sorted().prefix(4).joined(separator: ", ")
+        return "\(resolved.count) of \(AdministrationFlowConfigKey.allCases.count) operations run a flow ("
+            + names + (resolved.count > 4 ? ", …)" : ")")
+    }
+
     // MARK: - Lookups
 
     func firstGroupId() async throws -> String {
@@ -213,7 +255,7 @@ extension CheckContext {
 }
 
 /// A fetcher that records the request the SDK built and stops it before it reaches the network.
-private final class RequestProbe {
+final class RequestProbe {
     private struct Stopped: Error {}
 
     private(set) var url: URL?

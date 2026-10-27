@@ -71,13 +71,62 @@ public struct AgentsAPI {
         try await transport.related(id: id, subPath: "roles", query: page(limit, offset), fetcher: fetcher)
     }
 
-    /// Returns a page of the types an agent can be registered as.
+    /// Returns a page of the types an agent can be registered as. ``ThunderIDClient/agentTypes`` manages them.
     public func types(limit: Int? = nil, offset: Int? = nil, fetcher: ThunderIDFetcher? = nil) async throws
         -> AgentTypeListResponse {
-        try await typesTransport.list(query: page(limit, offset), fetcher: fetcher)
+        try await AgentTypesAPI(transport: typesTransport).list(limit: limit, offset: offset, fetcher: fetcher)
+    }
+
+    /// Gives an agent's OAuth client a new secret, generated here and saved on the agent. Fails with
+    /// ``ThunderIDErrorCode/invalidInput`` before saving anything when the agent has no OAuth client.
+    public func regenerateSecret(id: String, fetcher: ThunderIDFetcher? = nil) async throws
+        -> RegenerateAgentSecretResult {
+        let current = try await get(id: id, fetcher: fetcher)
+        let inbound = current.inboundAuthConfig ?? []
+        guard inbound.contains(where: { $0.type == "oauth2" }) else {
+            throw ThunderIDError(
+                code: .invalidInput,
+                message: "The agent has no OAuth client, so it has no client secret to regenerate."
+            )
+        }
+        let clientSecret = try SecretGenerator.generate()
+        let rotated = inbound.map { entry -> AgentInboundAuthConfig in
+            guard entry.type == "oauth2" else { return entry }
+            var config = entry.config ?? OAuth2Config(grantTypes: [], responseTypes: [])
+            config.clientSecret = clientSecret
+            return AgentInboundAuthConfig(type: entry.type, config: config)
+        }
+        var payload = UpdateAgentRequest(restating: current)
+        payload.inboundAuthConfig = rotated
+        payload.delegated = DelegationGrantTypes.isDelegated(rotated)
+        let agent = try await update(id: id, payload, fetcher: fetcher)
+        return RegenerateAgentSecretResult(agent: agent, clientSecret: clientSecret)
     }
 
     private func page(_ limit: Int?, _ offset: Int?) -> [URLQueryItem] {
         .management([("limit", limit.map(String.init)), ("offset", offset.map(String.init))])
+    }
+}
+
+extension UpdateAgentRequest {
+    /// The agent's caller-settable fields, for a full update. The server sets `id` and `clientId`, and
+    /// `ouHandle` is only display data, so they stay out.
+    init(restating agent: Agent) {
+        self.init()
+        ouId = agent.ouId
+        type = agent.type
+        name = agent.name
+        description = agent.description
+        logoUrl = agent.logoUrl
+        owner = agent.owner
+        attributes = agent.attributes
+        allowedUserTypes = agent.allowedUserTypes
+        allowedAgentTypes = agent.allowedAgentTypes
+        inboundAuthConfig = agent.inboundAuthConfig
+        authFlowId = agent.authFlowId
+        registrationFlowId = agent.registrationFlowId
+        isRegistrationFlowEnabled = agent.isRegistrationFlowEnabled
+        assertion = agent.assertion
+        loginConsent = agent.loginConsent
     }
 }

@@ -22,5 +22,19 @@
     <!-- <key>THUNDERID_ENDPOINT_ROLES</key><string>https://localhost:9090/roles</string> -->
     <!-- <key>THUNDERID_ENDPOINT_AGENTS</key><string>https://localhost:9090/agents</string> -->
     <!-- <key>THUNDERID_ENDPOINT_AGENT_TYPES</key><string>https://localhost:9090/agent-types</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_ORGANIZATION_UNITS</key><string>https://localhost:9090/organization-units</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_RESOURCE_SERVERS</key><string>https://localhost:9090/resource-servers</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_CONNECTIONS</key><string>https://localhost:9090/connections</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_FLOWS</key><string>https://localhost:9090/flows</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_NOTIFICATION_TEMPLATES</key><string>https://localhost:9090/notification-templates</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_DESIGN</key><string>https://localhost:9090/design</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_I18N</key><string>https://localhost:9090/i18n</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_SERVER_CONFIG</key><string>https://localhost:9090/server-config</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_GATEWAYS</key><string>https://localhost:9090/gateways</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_VARIABLES</key><string>https://localhost:9090/variables</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_SECRETS</key><string>https://localhost:9090/secrets</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_CONFIGURATION_VERSIONS</key><string>https://localhost:9090/configuration-versions</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_IMPORT</key><string>https://localhost:9090/import</string> -->
+    <!-- <key>THUNDERID_ENDPOINT_EXPORT</key><string>https://localhost:9090/export</string> -->
 </dict>
 </plist>

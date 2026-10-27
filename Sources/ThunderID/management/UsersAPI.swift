@@ -45,9 +45,42 @@ public struct UsersAPI {
         try await transport.update(id: id, user, fetcher: fetcher)
     }
 
-    /// Deletes a user.
-    public func delete(id: String, fetcher: ThunderIDFetcher? = nil) async throws {
+    /// Deletes a user. In `.flow` mode the configured user deletion flow runs instead, revoking the
+    /// user's grants and ending their sessions before the record goes.
+    public func delete(
+        id: String,
+        administrationMode: AdministrationMode = .native,
+        fetcher: ThunderIDFetcher? = nil
+    ) async throws {
+        let ran = try await transport.runAdministrationFlow(
+            administrationMode,
+            .userDeletion,
+            inputs: [AdministrationFlowInput.subject: id],
+            action: "user deletion",
+            fetcher: fetcher
+        )
+        if ran != nil { return }
         try await transport.delete(id: id, fetcher: fetcher)
+    }
+
+    /// Lists the resources that reference a user, such as agents that name the user as their owner, and
+    /// what happens to each when the user is deleted.
+    public func usages(id: String, fetcher: ThunderIDFetcher? = nil) async throws -> UserUsagesResponse {
+        try await transport.related(id: id, subPath: "usages", query: [], fetcher: fetcher)
+    }
+
+    /// Sets new values for some of a user's credential attributes, such as the password.
+    public func updateCredentials(
+        id: String,
+        _ request: UpdateUserCredentialsRequest,
+        fetcher: ThunderIDFetcher? = nil
+    ) async throws {
+        let _: EmptyResponse = try await transport.action(
+            id: id,
+            subPath: "update-credentials",
+            request,
+            fetcher: fetcher
+        )
     }
 
     /// Returns a page of the groups a user belongs to.
@@ -65,12 +98,9 @@ public struct UsersAPI {
         )
     }
 
-    /// Returns a page of the types a user can be created as.
+    /// Returns a page of the types a user can be created as. ``ThunderIDClient/userTypes`` manages them.
     public func types(limit: Int? = nil, offset: Int? = nil, fetcher: ThunderIDFetcher? = nil) async throws
         -> ManagedUserTypeListResponse {
-        try await typesTransport.list(
-            query: .management([("limit", limit.map(String.init)), ("offset", offset.map(String.init))]),
-            fetcher: fetcher
-        )
+        try await UserTypesAPI(transport: typesTransport).list(limit: limit, offset: offset, fetcher: fetcher)
     }
 }
