@@ -84,11 +84,40 @@ Configuration lives in [.swiftlint.yml](.swiftlint.yml). Key rules enforced:
 ```
 Sources/ThunderID/          Core SDK (auth, token, http layers)
 Sources/ThunderIDSwiftUI/   SwiftUI component library
-Tests/                      Unit tests (excluded from SwiftLint)
+  components/auth/          Sign-in/sign-up flows, plus buttons/ (incl. adapters/), flow/ and guards/
+  components/account/       The signed-in user's own account (User, UserProfile, ChangeCredential, ...)
+  components/admin/         Admin management screens (agents/, groups/, roles/, users/, shared/)
+  components/common/        Shared pieces used across groups (branding/, LanguageSwitcher)
+Tests/                      Unit tests (excluded from SwiftLint); component tests mirror components/
+                            under Tests/ThunderIDSwiftUITests/components/
 Playground/                 SwiftUI playground app built against the local SDK
 .swiftlint.yml              Lint configuration
 .github/workflows/          CI pipelines
 ```
+
+## Adding or changing a component
+
+The [SDK development specification](https://github.com/thunder-id/thunderid/blob/main/docs-internals/sdk-development/spec.md) (UI) is the contract. In practice, every component:
+
+1. **Lives in its functional group:** `auth/` (sign-in, sign-up, recovery, invites, callback, with `buttons/`, `flow/` and `guards/` inside), `account/` (the signed-in user's own data), `admin/` (management), or `common/` (shared across groups, such as the language switcher and branding). Primitives and the data layer keep their own folders.
+2. **Ships a styled variant and a `Base` variant.** `Base` takes its data and callbacks as parameters, with no SDK state, so an app can drive it itself (e.g. `BaseUserList`).
+3. **Accepts a custom render on both variants.** Passing it replaces the built-in UI, while the component keeps its data loading, state and actions. The mechanism is the platform's own:
+   - SwiftUI: an optional `content` closure, the same pattern as `BaseSignIn`.
+   It receives everything needed to draw the component: rows, columns, paging (`limit`, `offset`, `totalResults`, page change) and selection for a list; values, setters, submit and validity for a form; the record and the actions the app has allowed for a details, members, assignments or permissions view; plus loading and error state. Behaviour the specification requires still holds under a custom render: data-changing actions are off unless the app turns them on, a delete asks for confirmation, and server errors appear as translated messages.
+4. **Takes every string from the translation bundle**, in every shipped locale.
+5. **Tags elements rendered from a server-described flow step** with `thunderid-field-<id>` and `thunderid-action-<ref>`.
+6. **Has tests** for the built-in UI and for a custom render (XCTest).
+7. **Has a playground story,** including a **Custom rendering** variant drawn with the platform's own UI toolkit, and a capability check if it calls the server.
+
+A component that changes here usually needs the same change in the sibling SDKs. See the parity rules in the specification.
+
+## Samples
+
+The quickstarts and integration samples live in [thunder-id/samples](https://github.com/thunder-id/samples), and each one pins a released version of this SDK. A change here therefore can't break a sample until the sample bumps its version, which is exactly when a break would surface for a real app. Before raising a pull request, check every sample that uses this SDK:
+
+- **A sample stops compiling or behaving the same** (a renamed type or package, a changed signature, a moved default): raise a samples pull request that bumps the SDK version and fixes the sample. Keep it as a draft until the SDK release it needs is out.
+- **The change adds something a sample exists to show** (a self-care capability for `self-care/account`, a management component or operation for `b2b/manage`, a new sign-in option for the quickstarts): update that sample in the same samples pull request, so it demonstrates the new capability rather than working around its absence.
+- Link the samples pull request from this pull request's **Related PRs**, or say why no sample is affected.
 
 ## Code style
 
