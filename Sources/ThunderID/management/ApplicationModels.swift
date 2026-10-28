@@ -46,11 +46,13 @@ public struct Application: Codable {
     public let id: String
     public var createdAt: String?
     public var updatedAt: String?
+    /// Whether the application is active or suspended. Set by the server.
+    public var status: ApplicationAccessStatus?
     /// The caller-settable fields, ready to send back through `ApplicationsAPI.update(id:_:)`.
     public var request: ApplicationRequest
 
     private enum CodingKeys: String, CodingKey {
-        case id, createdAt, updatedAt
+        case id, createdAt, updatedAt, status
     }
 
     public init(from decoder: Decoder) throws {
@@ -58,6 +60,7 @@ public struct Application: Codable {
         id = try container.decode(String.self, forKey: .id)
         createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
         updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
+        status = try container.decodeIfPresent(ApplicationAccessStatus.self, forKey: .status)
         request = try ApplicationRequest(from: decoder)
     }
 
@@ -67,6 +70,7 @@ public struct Application: Codable {
         try container.encode(id, forKey: .id)
         try container.encodeIfPresent(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
+        try container.encodeIfPresent(status, forKey: .status)
     }
 
     public subscript<Value>(dynamicMember keyPath: WritableKeyPath<ApplicationRequest, Value>) -> Value {
@@ -88,6 +92,18 @@ public struct BasicApplication: Codable {
     public let template: String?
     public let isReadOnly: Bool?
     public let clientId: String?
+    /// Whether the application is active or suspended.
+    public let status: ApplicationAccessStatus?
+}
+
+/// Whether an application is active or suspended.
+public struct ApplicationAccessStatus: Codable, Equatable {
+    /// `ACTIVE` or `SUSPENDED`.
+    public let value: String?
+
+    public init(value: String?) {
+        self.value = value
+    }
 }
 
 /// A page of applications.
@@ -263,4 +279,32 @@ public struct AppleAttestationConfig: Codable {
         self.teamId = teamId
         self.bundleId = bundleId
     }
+}
+
+/// What the server read from a client ID metadata document (CIMD): the client's name and links, and the
+/// OAuth configuration it declares.
+public struct CimdPreviewResponse: Codable {
+    public let name: String
+    public let url: String?
+    public let tosUri: String?
+    public let policyUri: String?
+    public let contacts: [String]?
+    public let inboundAuthConfig: [InboundAuthConfig]
+}
+
+/// The result of ``ApplicationsAPI/regenerateClientSecret(id:administrationMode:fetcher:)``.
+public struct RegenerateClientSecretResult {
+    /// The application after the change. `nil` when a flow rotated the secret, since the flow does not
+    /// return the application.
+    public let application: Application?
+    /// The new client secret. This is the only time it can be read.
+    public let clientSecret: String
+}
+
+/// The result of ``ApplicationsAPI/regenerateFlowSecret(id:fetcher:)``.
+public struct RegenerateFlowSecretResult {
+    /// The application after the change.
+    public let application: Application
+    /// The new flow secret. This is the only time it can be read.
+    public let flowSecret: String
 }

@@ -10,6 +10,7 @@ struct AdminStoryIds {
     var roleId = ""
     var userId = ""
     var agentId = ""
+    var applicationId = ""
 }
 
 /// Stories for the admin components. Each has a `sample` source, which renders the `Base*` view
@@ -30,7 +31,16 @@ extension ExplorerCatalog {
             membership("roleAssignments", "RoleAssignments", group: "Admin · Roles", idKey: "roleId", id: ids.roleId),
             list("agentList", "AgentList", group: "Admin · Agents", item: "agents"),
             detail("agentDetails", "AgentDetails", group: "Admin · Agents", idKey: "agentId", id: ids.agentId),
-            create("agentCreate", "AgentCreate", group: "Admin · Agents")
+            create("agentCreate", "AgentCreate", group: "Admin · Agents"),
+            list("applicationList", "ApplicationList", group: "Admin · Applications", item: "applications"),
+            detail(
+                "applicationDetails",
+                "ApplicationDetails",
+                group: "Admin · Applications",
+                idKey: "applicationId",
+                id: ids.applicationId
+            ),
+            create("applicationCreate", "ApplicationCreate", group: "Admin · Applications")
         ]
     }
 

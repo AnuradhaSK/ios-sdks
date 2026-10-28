@@ -31,7 +31,9 @@ struct CheckContext {
 
     typealias Runner = @MainActor (CheckContext) async throws -> String
 
-    static let runners: [CapabilityID: Runner] = authRunners.merging(managementRunners) { current, _ in current }
+    static let runners: [CapabilityID: Runner] = authRunners
+        .merging(managementRunners) { current, _ in current }
+        .merging(serverResourceRunners) { current, _ in current }
 
     private static let authRunners: [CapabilityID: Runner] = [
         .browserSignIn: { try await $0.signInWithBrowser() },

@@ -86,7 +86,7 @@ Sources/ThunderID/          Core SDK (auth, token, http layers)
 Sources/ThunderIDSwiftUI/   SwiftUI component library
   components/auth/          Sign-in/sign-up flows, plus buttons/ (incl. adapters/), flow/ and guards/
   components/account/       The signed-in user's own account (User, UserProfile, ChangeCredential, ...)
-  components/admin/         Admin management screens (agents/, groups/, roles/, users/, shared/)
+  components/admin/         Admin management screens (agents/, applications/, groups/, roles/, users/, shared/)
   components/common/        Shared pieces used across groups (branding/, LanguageSwitcher)
 Tests/                      Unit tests (excluded from SwiftLint); component tests mirror components/
                             under Tests/ThunderIDSwiftUITests/components/

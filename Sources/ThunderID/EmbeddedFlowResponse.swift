@@ -22,18 +22,31 @@ public struct EmbeddedFlowResponse: Decodable {
 }
 
 /// The flow execution `error` object, which replaced `failureReason`.
-public struct FlowError: Decodable {
+/// Administration flows report a refused step with the same object (``ThunderIDError/flowError``).
+public struct FlowError: Decodable, Equatable {
     public let code: String?
     public let message: FlowErrorText?
     public let description: FlowErrorText?
+
+    public init(code: String? = nil, message: FlowErrorText? = nil, description: FlowErrorText? = nil) {
+        self.code = code
+        self.message = message
+        self.description = description
+    }
 }
 
-public struct FlowErrorText: Decodable {
+public struct FlowErrorText: Decodable, Equatable {
     public let key: String?
     /// The untranslated text, with `params` already substituted.
     public let defaultValue: String?
     /// Values for the `{{param(name)}}` placeholders a translation of `key` keeps.
     public let params: [String: String]?
+
+    public init(key: String? = nil, defaultValue: String? = nil, params: [String: String]? = nil) {
+        self.key = key
+        self.defaultValue = defaultValue
+        self.params = params
+    }
 }
 
 extension EmbeddedFlowResponse {

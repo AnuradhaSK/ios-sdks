@@ -143,8 +143,8 @@ final class GroupsRolesAPITests: XCTestCase {
 
         XCTAssertEqual(recorder.requests.map(\.httpMethod), ["GET", "GET", "POST", "PUT", "DELETE"])
         XCTAssertEqual(recorder.urls, [
-            "\(baseUrl)/roles?limit=5",
-            "\(baseUrl)/roles/r-1",
+            "\(baseUrl)/roles?include=display&limit=5",
+            "\(baseUrl)/roles/r-1?include=display",
             "\(baseUrl)/roles",
             "\(baseUrl)/roles/r-1",
             "\(baseUrl)/roles/r-1"
@@ -200,9 +200,9 @@ final class GroupsRolesAPITests: XCTestCase {
         XCTAssertTrue(recorder.requests.allSatisfy { $0.httpMethod == "GET" })
         XCTAssertEqual(recorder.urls, [
             "\(baseUrl)/users/u-1/groups?limit=100",
-            "\(baseUrl)/user-types?limit=100",
+            "\(baseUrl)/user-types?include=display&limit=100",
             "\(baseUrl)/agents/ag-1/groups",
-            "\(baseUrl)/agent-types?offset=10",
+            "\(baseUrl)/agent-types?include=display&offset=10",
             "\(baseUrl)/agents/ag-1/roles?limit=5"
         ])
     }
@@ -227,9 +227,9 @@ final class GroupsRolesAPITests: XCTestCase {
 
         XCTAssertEqual(recorder.urls, [
             "https://rs.example.com/teams/g%201/members?include=display",
-            "https://rs.example.com/roles",
-            "https://rs.example.com/agent-kinds",
-            "https://rs.example.com/schemas"
+            "https://rs.example.com/roles?include=display",
+            "https://rs.example.com/agent-kinds?include=display",
+            "https://rs.example.com/schemas?include=display"
         ])
     }
 

@@ -84,3 +84,32 @@ public struct ManagedUserTypeListResponse: Codable {
     public let count: Int
     public let types: [ManagedUserType]
 }
+
+/// A resource that references a user, such as an agent that names the user as its owner.
+public struct UserUsage: Codable {
+    public let id: String
+    public let displayName: String
+    /// The kind of resource, such as `agent`.
+    public let resourceType: String
+    /// What happens to the resource when the user is deleted: `fallback`, `cascade` or `restrict`.
+    public let behaviorOnDelete: String
+}
+
+/// The resources that reference a user. `totalResults` and `summary` are `nil` when the server could
+/// not tell; `0` means there are none.
+public struct UserUsagesResponse: Codable {
+    public let count: Int
+    public let totalResults: Int?
+    /// The number of usages of each resource type, such as `agent`.
+    public let summary: [String: Int]?
+    public let usages: [UserUsage]
+}
+
+/// New values for some of a user's credential attributes, keyed by attribute name.
+public struct UpdateUserCredentialsRequest: Codable {
+    public var credentials: [String: String]
+
+    public init(credentials: [String: String]) {
+        self.credentials = credentials
+    }
+}

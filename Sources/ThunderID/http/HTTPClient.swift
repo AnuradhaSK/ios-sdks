@@ -74,11 +74,13 @@ final class HTTPClient {
 
     /// Sends an authenticated request to an absolute URL, which may live on a different host from `baseUrl`.
     /// When `fetcher` is set it replaces the `URLSession` transport for this request; the access token is
-    /// already attached to the request it receives.
+    /// already attached to the request it receives. Set `isSensitive` for a request or response that can
+    /// carry a credential, such as a secret value: its bodies are then never logged.
     func send<T: Decodable>(
         method: String,
         url: URL,
         body: Data? = nil,
+        isSensitive: Bool = false,
         fetcher: ThunderIDFetcher? = nil
     ) async throws -> T {
         guard url.scheme == "https" else {
@@ -95,7 +97,7 @@ final class HTTPClient {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         debugLogRequest(request, body: nil)
-        return try await perform(request, fetcher: fetcher)
+        return try await perform(request, isSensitive: isSensitive, fetcher: fetcher)
     }
 
     private func buildRequest(
@@ -125,15 +127,19 @@ final class HTTPClient {
         return request
     }
 
-    private func perform<T: Decodable>(_ request: URLRequest, fetcher: ThunderIDFetcher? = nil) async throws -> T {
+    private func perform<T: Decodable>(
+        _ request: URLRequest,
+        isSensitive: Bool = false,
+        fetcher: ThunderIDFetcher? = nil
+    ) async throws -> T {
         let (data, response): (Data, HTTPURLResponse)
         if let transport {
             (data, response) = try await transport(request, fetcher)
         } else {
             (data, response) = try await rawData(for: request, fetcher: fetcher)
         }
-        debugLogResponse(response, data: data)
-        return try handleResponse(response, data: data)
+        debugLogResponse(response, data: isSensitive ? nil : data)
+        return try handleResponse(response, data: data, isSensitive: isSensitive)
     }
 
     /// Sends `request` as it is and returns the response whatever its status. It logs neither the
@@ -163,32 +169,40 @@ final class HTTPClient {
         return (data, http)
     }
 
-    private func handleResponse<T: Decodable>(_ http: HTTPURLResponse, data: Data) throws -> T {
-        switch http.statusCode {
-        case 200...299:
-            return try decodeSuccess(data)
-        case 400:
-            let rawBody = String(data: data, encoding: .utf8) ?? "<non-utf8>"
-            print("[DEBUG][HTTPClient] 400 response body: \(rawBody)")
-            let msgBody = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-            let detail = msgBody?["message"] as? String ?? "Bad request"
-            throw ThunderIDError(code: .invalidInput, message: detail)
-        case 401:
-            throw ThunderIDError(code: .authenticationFailed, message: "Unauthorized")
-        case 403:
-            throw ThunderIDError(code: .forbidden, message: "Forbidden")
-        case 404:
-            throw ThunderIDError(code: .notFound, message: "Not found")
-        case 409:
-            throw ThunderIDError(code: .userAlreadyExists, message: "Conflict")
-        case 500...599:
-            throw ThunderIDError(code: .serverError, message: "Server error: \(http.statusCode)")
-        default:
-            throw ThunderIDError(code: .unknownError, message: "Unexpected status: \(http.statusCode)")
+    private func handleResponse<T: Decodable>(
+        _ http: HTTPURLResponse,
+        data: Data,
+        isSensitive: Bool = false
+    ) throws -> T {
+        if (200...299).contains(http.statusCode) {
+            return try decodeSuccess(data, isSensitive: isSensitive)
         }
+        throw Self.failure(status: http.statusCode, data: data, isSensitive: isSensitive)
     }
 
-    private func decodeSuccess<T: Decodable>(_ data: Data) throws -> T {
+    /// Maps a failed response to its error code, carrying the server's error envelope when the body is one.
+    private static func failure(status: Int, data: Data, isSensitive: Bool = false) -> ThunderIDError {
+        let serverError = ServerError.parse(data)
+        let (code, message): (ThunderIDErrorCode, String)
+        switch status {
+        case 400:
+            if !isSensitive {
+                let rawBody = String(data: data, encoding: .utf8) ?? "<non-utf8>"
+                print("[DEBUG][HTTPClient] 400 response body: \(rawBody)")
+            }
+            let msgBody = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            (code, message) = (.invalidInput, msgBody?["message"] as? String ?? "Bad request")
+        case 401: (code, message) = (.authenticationFailed, "Unauthorized")
+        case 403: (code, message) = (.forbidden, "Forbidden")
+        case 404: (code, message) = (.notFound, "Not found")
+        case 409: (code, message) = (.userAlreadyExists, "Conflict")
+        case 500...599: (code, message) = (.serverError, "Server error: \(status)")
+        default: (code, message) = (.unknownError, "Unexpected status: \(status)")
+        }
+        return ThunderIDError(code: code, message: message, serverError: serverError)
+    }
+
+    private func decodeSuccess<T: Decodable>(_ data: Data, isSensitive: Bool = false) throws -> T {
         if T.self == EmptyResponse.self {
             guard let result = EmptyResponse() as? T else {
                 throw ThunderIDError(code: .unknownError, message: "Type mismatch")
@@ -198,7 +212,7 @@ final class HTTPClient {
         do {
             return try JSONDecoder().decode(T.self, from: data)
         } catch {
-            if let raw = String(data: data, encoding: .utf8) {
+            if !isSensitive, let raw = String(data: data, encoding: .utf8) {
                 debugLog("HTTP decode failure payload: \(raw)")
             }
             throw ThunderIDError(
@@ -227,13 +241,14 @@ private extension HTTPClient {
         #endif
     }
 
-    func debugLogResponse(_ response: URLResponse, data: Data) {
+    /// Logs the response status, and its body unless `data` is `nil` (a response that can hold a credential).
+    func debugLogResponse(_ response: URLResponse, data: Data?) {
         #if DEBUG
         guard let http = response as? HTTPURLResponse else {
             debugLog("HTTP response: non-HTTP response")
             return
         }
-        let preview = String(data: data, encoding: .utf8) ?? "<non-utf8 body>"
+        let preview = data.map { String(data: $0, encoding: .utf8) ?? "<non-utf8 body>" } ?? "<redacted>"
         debugLog("HTTP response: status=\(http.statusCode) body=\(preview)")
         #endif
     }

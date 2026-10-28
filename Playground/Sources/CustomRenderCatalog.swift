@@ -8,7 +8,12 @@ import Foundation
 /// SwiftUI layout can draw it.
 extension ExplorerCatalog {
     static func customRender(ids: AdminStoryIds) -> [ComponentSpec] {
-        [customUserList, customGroupCreate, customUserDetails(userId: ids.userId)]
+        [
+            customUserList,
+            customGroupCreate,
+            customUserDetails(userId: ids.userId),
+            customApplicationDetails(applicationId: ids.applicationId)
+        ]
     }
 
     private static let customSource = StoryControl(name: "source", kind: .options(["sample", "live"]))

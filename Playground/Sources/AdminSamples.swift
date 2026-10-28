@@ -102,6 +102,24 @@ enum AdminSamples {
         AdminOption(label: "Service", value: "service")
     ]
 
+    static let applications: [BasicApplication] = decode("""
+    [
+      {"id": "app-console", "name": "Console", "clientId": "console", "type": "browser",
+       "template": "react", "status": {"value": "ACTIVE"}},
+      {"id": "app-billing", "name": "Billing service", "clientId": "billing", "type": "m2m",
+       "status": {"value": "SUSPENDED"}},
+      {"id": "app-portal", "name": "Partner portal", "type": "fullstack", "isReadOnly": true}
+    ]
+    """)
+
+    static let application: Application = decode("""
+    {"id": "app-console", "name": "Console", "description": "The admin console", "type": "browser",
+     "ouId": "ou-1", "url": "https://console.example.com", "status": {"value": "ACTIVE"},
+     "inboundAuthConfig": [{"type": "oauth2", "config": {"clientId": "console", "publicClient": false,
+       "redirectUris": ["https://console.example.com/callback"],
+       "grantTypes": ["authorization_code", "refresh_token"], "responseTypes": ["code"]}}]}
+    """)
+
     private static func decode<Value: Decodable>(_ json: String) -> Value {
         do {
             return try JSONDecoder().decode(Value.self, from: Data(json.utf8))

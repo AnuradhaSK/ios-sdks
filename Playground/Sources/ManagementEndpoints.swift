@@ -21,7 +21,41 @@ struct ManagementCollection: Identifiable {
         ManagementCollection(path: "groups", configKey: "THUNDERID_ENDPOINT_GROUPS", field: \.groups),
         ManagementCollection(path: "roles", configKey: "THUNDERID_ENDPOINT_ROLES", field: \.roles),
         ManagementCollection(path: "agents", configKey: "THUNDERID_ENDPOINT_AGENTS", field: \.agents),
-        ManagementCollection(path: "agent-types", configKey: "THUNDERID_ENDPOINT_AGENT_TYPES", field: \.agentTypes)
+        ManagementCollection(path: "agent-types", configKey: "THUNDERID_ENDPOINT_AGENT_TYPES", field: \.agentTypes),
+        ManagementCollection(
+            path: "organization-units",
+            configKey: "THUNDERID_ENDPOINT_ORGANIZATION_UNITS",
+            field: \.organizationUnits
+        ),
+        ManagementCollection(
+            path: "resource-servers",
+            configKey: "THUNDERID_ENDPOINT_RESOURCE_SERVERS",
+            field: \.resourceServers
+        ),
+        ManagementCollection(path: "connections", configKey: "THUNDERID_ENDPOINT_CONNECTIONS", field: \.connections),
+        ManagementCollection(path: "flows", configKey: "THUNDERID_ENDPOINT_FLOWS", field: \.flows),
+        ManagementCollection(
+            path: "notification-templates",
+            configKey: "THUNDERID_ENDPOINT_NOTIFICATION_TEMPLATES",
+            field: \.notificationTemplates
+        ),
+        ManagementCollection(path: "design", configKey: "THUNDERID_ENDPOINT_DESIGN", field: \.design),
+        ManagementCollection(path: "i18n", configKey: "THUNDERID_ENDPOINT_I18N", field: \.i18n),
+        ManagementCollection(
+            path: "server-config",
+            configKey: "THUNDERID_ENDPOINT_SERVER_CONFIG",
+            field: \.serverConfig
+        ),
+        ManagementCollection(path: "gateways", configKey: "THUNDERID_ENDPOINT_GATEWAYS", field: \.gateways),
+        ManagementCollection(path: "variables", configKey: "THUNDERID_ENDPOINT_VARIABLES", field: \.variables),
+        ManagementCollection(path: "secrets", configKey: "THUNDERID_ENDPOINT_SECRETS", field: \.secrets),
+        ManagementCollection(
+            path: "configuration-versions",
+            configKey: "THUNDERID_ENDPOINT_CONFIGURATION_VERSIONS",
+            field: \.configurationVersions
+        ),
+        ManagementCollection(path: "import", configKey: "THUNDERID_ENDPOINT_IMPORT", field: \.import),
+        ManagementCollection(path: "export", configKey: "THUNDERID_ENDPOINT_EXPORT", field: \.export)
     ]
 }
 

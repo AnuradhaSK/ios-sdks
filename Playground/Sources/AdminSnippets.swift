@@ -29,9 +29,12 @@ enum AdminSnippets {
             let deletion = deletable ? ["deletable: true", "onDeleted: { /* deleted */ }"] : []
             return call(name, ["\(idKey): \(id)"] + deletion)
         }
-        let record = name == "UserDetails"
-            ? ["user: user", "groups: groups"]
-            : ["agent: agent", "groups: groups", "roles: roles"]
+        let record: [String]
+        switch name {
+        case "UserDetails": record = ["user: user", "groups: groups"]
+        case "ApplicationDetails": record = ["application: application"]
+        default: record = ["agent: agent", "groups: groups", "roles: roles"]
+        }
         return call("Base\(name)", record + state(values)
             + (deletable ? ["onDelete: { /* delete */ }"] : []))
     }

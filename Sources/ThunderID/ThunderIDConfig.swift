@@ -133,11 +133,32 @@ public struct ThunderIDEndpoints {
     /// Defaults to `{baseUrl}/agent-types`.
     public var agentTypes: String?
     public var applications: String?
+    /// Defaults to `{baseUrl}/configuration-versions`.
+    public var configurationVersions: String?
+    public var connections: String?
+    /// The design collection, which holds `themes`, `layouts` and `resolve`.
+    public var design: String?
+    public var export: String?
+    public var flows: String?
+    public var gateways: String?
     public var groups: String?
+    /// The translations collection, which holds `languages`.
+    public var i18n: String?
+    public var `import`: String?
+    /// Defaults to `{baseUrl}/notification-templates`.
+    public var notificationTemplates: String?
+    /// Defaults to `{baseUrl}/organization-units`.
+    public var organizationUnits: String?
+    /// Defaults to `{baseUrl}/resource-servers`.
+    public var resourceServers: String?
     public var roles: String?
+    public var secrets: String?
+    /// Defaults to `{baseUrl}/server-config`.
+    public var serverConfig: String?
     public var users: String?
     /// Defaults to `{baseUrl}/user-types`.
     public var userTypes: String?
+    public var variables: String?
     /// The app backend's auth endpoints. Setting them hands sign-in to the backend: the SDK then signs in,
     /// reads the session, and sends API calls through the backend, and never holds the user's tokens.
     /// `baseUrl` is then the API base whose requests go through the backend's proxy. Unset by default.
@@ -147,19 +168,47 @@ public struct ThunderIDEndpoints {
         agents: String? = nil,
         agentTypes: String? = nil,
         applications: String? = nil,
+        configurationVersions: String? = nil,
+        connections: String? = nil,
+        design: String? = nil,
+        export: String? = nil,
+        flows: String? = nil,
+        gateways: String? = nil,
         groups: String? = nil,
+        i18n: String? = nil,
+        import: String? = nil,
+        notificationTemplates: String? = nil,
+        organizationUnits: String? = nil,
+        resourceServers: String? = nil,
         roles: String? = nil,
+        secrets: String? = nil,
+        serverConfig: String? = nil,
         users: String? = nil,
         userTypes: String? = nil,
+        variables: String? = nil,
         backend: ThunderIDBackendEndpoints? = nil
     ) {
         self.agents = agents
         self.agentTypes = agentTypes
         self.applications = applications
+        self.configurationVersions = configurationVersions
+        self.connections = connections
+        self.design = design
+        self.export = export
+        self.flows = flows
+        self.gateways = gateways
         self.groups = groups
+        self.i18n = i18n
+        self.import = `import`
+        self.notificationTemplates = notificationTemplates
+        self.organizationUnits = organizationUnits
+        self.resourceServers = resourceServers
         self.roles = roles
+        self.secrets = secrets
+        self.serverConfig = serverConfig
         self.users = users
         self.userTypes = userTypes
+        self.variables = variables
         self.backend = backend
     }
 }

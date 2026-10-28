@@ -42,11 +42,36 @@ public extension ThunderIDState {
         )
     }
 
-    func deleteApplicationMutation(fetcher: ThunderIDFetcher? = nil) -> ResourceMutation<String, Void> {
+    /// Deletes an application. In `.flow` mode the configured application deletion flow runs instead.
+    func deleteApplicationMutation(
+        administrationMode: AdministrationMode = .native,
+        fetcher: ThunderIDFetcher? = nil
+    ) -> ResourceMutation<String, Void> {
         let client = client
         return mutation(
             invalidating: { _ in [[ApplicationQueryKeys.applications]] },
-            perform: { id in try await client.applications.delete(id: id, fetcher: fetcher) }
+            perform: { id in
+                try await client.applications.delete(id: id, administrationMode: administrationMode, fetcher: fetcher)
+            }
+        )
+    }
+
+    /// Gives an application a new client secret. The result carries the secret, which is the only time
+    /// it can be read. See ``ApplicationsAPI/regenerateClientSecret(id:administrationMode:fetcher:)``.
+    func regenerateClientSecretMutation(
+        administrationMode: AdministrationMode = .native,
+        fetcher: ThunderIDFetcher? = nil
+    ) -> ResourceMutation<String, RegenerateClientSecretResult> {
+        let client = client
+        return mutation(
+            invalidating: { [[ApplicationQueryKeys.application, $0]] },
+            perform: { id in
+                try await client.applications.regenerateClientSecret(
+                    id: id,
+                    administrationMode: administrationMode,
+                    fetcher: fetcher
+                )
+            }
         )
     }
 

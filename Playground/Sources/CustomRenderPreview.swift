@@ -19,6 +19,7 @@ struct CustomRenderPreview: View {
             switch id {
             case "customUserList": CustomUserListStory(values: values, onEvent: onEvent)
             case "customGroupCreate": groupCreate
+            case "customApplicationDetails": CustomApplicationDetailsStory(values: values, onEvent: onEvent)
             default: userDetails
             }
         }

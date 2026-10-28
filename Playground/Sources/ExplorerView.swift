@@ -28,7 +28,8 @@ struct ExplorerView: View {
                 groupId: ids.groupId ?? "",
                 roleId: ids.roleId ?? "",
                 userId: ids.userId ?? "",
-                agentId: ids.agentId ?? ""
+                agentId: ids.agentId ?? "",
+                applicationId: ids.applicationId ?? ""
             )
         )
     }
