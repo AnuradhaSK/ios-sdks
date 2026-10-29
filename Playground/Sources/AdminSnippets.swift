@@ -57,8 +57,11 @@ enum AdminSnippets {
     static func membership(name: String, idKey: String, values: PropValues) -> String {
         let isGroup = name == "GroupMembers"
         if values.isLive {
+            let ouId = isGroup ? nil : values.optional("ouId")
             return call(name, ["\(idKey): \(ExplorerCatalog.quote(values.text(idKey)))"]
-                + (values.flag("editable") ? ["editable: true"] : []) + texts(values))
+                + (values.flag("editable") ? ["editable: true"] : [])
+                + (ouId.map { ["ouId: \(ExplorerCatalog.quote($0))"] } ?? [])
+                + texts(values))
         }
         let rows = isGroup ? "members" : "assignments"
         var args = ["\(rows): \(values.text("state") == "empty" ? "[]" : rows)"]

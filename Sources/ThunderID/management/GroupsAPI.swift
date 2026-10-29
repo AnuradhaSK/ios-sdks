@@ -8,14 +8,19 @@ import Foundation
 public struct GroupsAPI {
     let transport: ManagementTransport
 
-    /// Returns a page of groups.
-    public func list(limit: Int? = nil, offset: Int? = nil, fetcher: ThunderIDFetcher? = nil) async throws
-        -> GroupListResponse {
+    /// Returns a page of groups. `filter` narrows it on the server, for example `ouId eq "<id>"`.
+    public func list(
+        limit: Int? = nil,
+        offset: Int? = nil,
+        filter: String? = nil,
+        fetcher: ThunderIDFetcher? = nil
+    ) async throws -> GroupListResponse {
         try await transport.list(
             query: .management([
                 ("include", "display"),
                 ("limit", limit.map(String.init)),
-                ("offset", offset.map(String.init))
+                ("offset", offset.map(String.init)),
+                ("filter", filter)
             ]),
             fetcher: fetcher
         )

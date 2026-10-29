@@ -5,7 +5,7 @@ import SwiftUI
 import ThunderID
 
 /// A page of groups, rendered from the data it is given. Pair it with
-/// ``ThunderIDState/groupsQuery(limit:offset:fetcher:)`` or any other source; ``GroupList`` does that for you.
+/// ``ThunderIDState/groupsQuery(limit:offset:filter:fetcher:)`` or any other source; ``GroupList`` does that for you.
 public struct BaseGroupList<Content: View>: View {
     @EnvironmentObject private var i18n: ThunderIDI18n
     let groups: [ManagedGroup]

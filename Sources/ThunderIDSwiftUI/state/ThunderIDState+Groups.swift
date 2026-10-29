@@ -10,11 +10,12 @@ public typealias GroupMembersInput = (groupId: String, members: [GroupMemberInpu
 /// Reactive wrappers over the group operations. Each accepts an optional `fetcher` that takes
 /// precedence over `ThunderIDConfig.http.fetcher`.
 public extension ThunderIDState {
-    func groupsQuery(limit: Int? = nil, offset: Int? = nil, fetcher: ThunderIDFetcher? = nil)
+    func groupsQuery(limit: Int? = nil, offset: Int? = nil, filter: String? = nil, fetcher: ThunderIDFetcher? = nil)
         -> ResourceQuery<GroupListResponse> {
         let client = client
-        return query(key: listKey(GroupQueryKeys.groups, ["limit": limit, "offset": offset])) {
-            try await client.groups.list(limit: limit, offset: offset, fetcher: fetcher)
+        let key = listKey(GroupQueryKeys.groups, ["limit": limit, "offset": offset]) + ["filter=\(filter ?? "")"]
+        return query(key: key) {
+            try await client.groups.list(limit: limit, offset: offset, filter: filter, fetcher: fetcher)
         }
     }
 
