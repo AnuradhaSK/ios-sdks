@@ -84,6 +84,12 @@ final class AdminComponentTests: XCTestCase {
         XCTAssertNil(BaseRoleAssignments(assignments: []).onUnassign)
     }
 
+    func testRoleAssignmentsListCandidatesFromTheGivenOrganizationUnit() {
+        XCTAssertEqual(RoleAssignments(roleId: "r-1", ouId: "ou-1").candidateFilter, "ouId eq \"ou-1\"")
+        XCTAssertNil(RoleAssignments(roleId: "r-1").candidateFilter)
+        XCTAssertNil(RoleAssignments(roleId: "r-1", ouId: " ").candidateFilter)
+    }
+
     func testPaginationDescribesTheVisibleRange() {
         let middle = AdminPagination(i18n: i18n, limit: 20, offset: 20, total: 45) { _ in }
         let last = AdminPagination(i18n: i18n, limit: 20, offset: 40, total: 45) { _ in }

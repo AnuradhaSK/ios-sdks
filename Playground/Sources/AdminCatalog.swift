@@ -130,11 +130,15 @@ extension ExplorerCatalog {
             id: id,
             name: name,
             group: group,
-            defaults: common.merging([idKey: value, "editable": "true", "error": forbidden]) { _, new in new },
+            defaults: common.merging([idKey: value, "editable": "true", "error": forbidden, "ouId": ""]) { _, new in
+                new
+            },
             controls: [sourceControl, stateControl(["data", "loading", "empty", "error"])]
                 + [StoryControl(name: "editable", kind: .bool)]
                 + textControls
-                + [StoryControl(name: idKey, kind: .text), errorControl],
+                + [StoryControl(name: idKey, kind: .text)]
+                + (name == "RoleAssignments" ? [StoryControl(name: "ouId", kind: .text)] : [])
+                + [errorControl],
             stories: states(["data", "loading", "empty", "error"]),
             isTall: true
         ) { values in AdminSnippets.membership(name: name, idKey: idKey, values: values) }

@@ -90,6 +90,16 @@ final class GroupsRolesAPITests: XCTestCase {
         }
     }
 
+    func testGroupListSendsTheFilter() async throws {
+        let recorder = RecordingFetcher()
+        let client = try await makeClient(fetcher: recorder.fetcher)
+
+        recorder.respond(emptyPage)
+        _ = try await client.groups.list(limit: 10, filter: "ouId eq \"ou-1\"")
+
+        XCTAssertEqual(recorder.urls, ["\(baseUrl)/groups?include=display&limit=10&filter=ouId%20eq%20%22ou-1%22"])
+    }
+
     func testGroupMembersAreListedAddedAndRemovedThroughTheirOwnEndpoints() async throws {
         let recorder = RecordingFetcher()
         recorder.respond(

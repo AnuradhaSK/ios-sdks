@@ -180,12 +180,13 @@ public extension BaseRoleAssignments where Content == EmptyView {
 
 /// The identities a role is assigned to, loaded through the management API. Set `editable` to let
 /// the signed-in user assign the role to users, groups and agents and remove assignments; it is
-/// off by default.
+/// off by default. Set `ouId` to offer only the users, groups and agents of that organization unit.
 public struct RoleAssignments<Content: View>: View {
     @EnvironmentObject private var thunderState: ThunderIDState
     let roleId: String
     let editable: Bool
     let filterable: Bool
+    let ouId: String?
     let title: String?
     let description: String?
     let content: ((RoleAssignmentsState) -> Content)?
@@ -195,6 +196,7 @@ public struct RoleAssignments<Content: View>: View {
         roleId: String,
         editable: Bool = false,
         filterable: Bool = true,
+        ouId: String? = nil,
         title: String? = nil,
         description: String? = nil,
         renderContent: ((RoleAssignmentsState) -> Content)?
@@ -202,6 +204,7 @@ public struct RoleAssignments<Content: View>: View {
         self.roleId = roleId
         self.editable = editable
         self.filterable = filterable
+        self.ouId = ouId
         self.title = title
         self.description = description
         self.content = renderContent
@@ -212,6 +215,7 @@ public struct RoleAssignments<Content: View>: View {
         roleId: String,
         editable: Bool = false,
         filterable: Bool = true,
+        ouId: String? = nil,
         title: String? = nil,
         description: String? = nil,
         @ViewBuilder content: @escaping (RoleAssignmentsState) -> Content
@@ -220,10 +224,16 @@ public struct RoleAssignments<Content: View>: View {
             roleId: roleId,
             editable: editable,
             filterable: filterable,
+            ouId: ouId,
             title: title,
             description: description,
             renderContent: content
         )
+    }
+
+    /// The filter the candidates are listed with, `nil` to list them from every organization unit.
+    var candidateFilter: String? {
+        ouId.flatMap { ManagementFilter.equality(attribute: "ouId", value: $0) }
     }
 
     public var body: some View {
@@ -233,7 +243,8 @@ public struct RoleAssignments<Content: View>: View {
             typeFilter: typeFilter,
             onTypeFilterChange: filterable ? { typeFilter = $0 } : nil
         )
-        .id("\(roleId)|\(editable)|\(typeFilter?.rawValue ?? "")")
+        // A new organization unit starts new queries, so no candidate from the previous one is offered.
+        .id("\(roleId)|\(editable)|\(typeFilter?.rawValue ?? "")|\(candidateFilter ?? "")")
     }
 }
 
@@ -242,6 +253,7 @@ public extension RoleAssignments where Content == EmptyView {
         roleId: String,
         editable: Bool = false,
         filterable: Bool = true,
+        ouId: String? = nil,
         title: String? = nil,
         description: String? = nil
     ) {
@@ -249,6 +261,7 @@ public extension RoleAssignments where Content == EmptyView {
             roleId: roleId,
             editable: editable,
             filterable: filterable,
+            ouId: ouId,
             title: title,
             description: description,
             renderContent: nil
@@ -277,9 +290,9 @@ private struct RoleAssignmentsHost<Content: View>: View {
         _assignments = StateObject(
             wrappedValue: state.roleAssignmentsQuery(roleId: props.roleId, type: typeFilter, limit: 100)
         )
-        _users = StateObject(wrappedValue: state.usersQuery(limit: 100))
-        _groups = StateObject(wrappedValue: state.groupsQuery(limit: 100))
-        _agents = StateObject(wrappedValue: state.agentsQuery(limit: 100))
+        _users = StateObject(wrappedValue: state.usersQuery(limit: 100, filter: props.candidateFilter))
+        _groups = StateObject(wrappedValue: state.groupsQuery(limit: 100, filter: props.candidateFilter))
+        _agents = StateObject(wrappedValue: state.agentsQuery(limit: 100, filter: props.candidateFilter))
         _assign = StateObject(wrappedValue: state.addRoleAssignmentsMutation())
         _unassign = StateObject(wrappedValue: state.removeRoleAssignmentsMutation())
         self.props = props
